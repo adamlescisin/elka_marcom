@@ -3,10 +3,16 @@
 
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import argon2 from "argon2";
 import * as readline from "readline/promises";
+import path from "path";
 
-const prisma = new PrismaClient();
+const raw = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
+const filePath = raw.startsWith("file:") ? raw.slice(5) : raw;
+const url = filePath.startsWith("/") ? `file:${filePath}` : `file:${path.resolve(process.cwd(), filePath)}`;
+const prisma = new PrismaClient({ adapter: new PrismaLibSql({ url }) });
+
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
 async function main() {
