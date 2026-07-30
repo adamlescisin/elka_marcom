@@ -118,12 +118,13 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
                 type: "div",
                 props: {
                   style: {
+                    display: "flex",
                     position: "absolute",
                     top: 0,
                     left: 0,
                     width: 1080,
                     height: 1080,
-                    background: `linear-gradient(135deg, ${brandColors.primary} 0%, ${brandColors.accent} 100%)`,
+                    backgroundImage: `linear-gradient(135deg, ${brandColors.primary} 0%, ${brandColors.accent} 100%)`,
                   },
                 },
               },
@@ -132,12 +133,13 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
             type: "div",
             props: {
               style: {
+                display: "flex",
                 position: "absolute",
                 bottom: 0,
                 left: 0,
                 right: 0,
                 height: 480,
-                background: "linear-gradient(transparent, rgba(0,0,0,0.82))",
+                backgroundImage: "linear-gradient(transparent, rgba(0,0,0,0.82))",
               },
             },
           },
@@ -190,6 +192,8 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
             type: "div",
             props: {
               style: {
+                display: "flex",
+                alignItems: "center",
                 position: "absolute",
                 top: 56,
                 left: 72,
@@ -273,12 +277,13 @@ async function renderCarouselSlide(
                 type: "div",
                 props: {
                   style: {
+                    display: "flex",
                     position: "absolute",
                     bottom: 0,
                     left: 0,
                     right: 0,
                     height: 500,
-                    background: "linear-gradient(transparent, rgba(0,0,0,0.75))",
+                    backgroundImage: "linear-gradient(transparent, rgba(0,0,0,0.75))",
                   },
                 },
               }
@@ -289,6 +294,7 @@ async function renderCarouselSlide(
                 type: "div",
                 props: {
                   style: {
+                    display: "flex",
                     position: "absolute",
                     top: 0,
                     left: 0,
@@ -376,6 +382,8 @@ async function renderCarouselSlide(
             type: "div",
             props: {
               style: {
+                display: "flex",
+                alignItems: "center",
                 position: "absolute",
                 top: 52,
                 left: isFirst ? 72 : 80,
