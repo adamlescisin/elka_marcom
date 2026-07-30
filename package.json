@@ -1,0 +1,48 @@
+{
+  "name": "elka_marcom",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "workers": "tsx src/workers/index.ts",
+    "setup": "npx tsx scripts/setup.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.4",
+    "@prisma/adapter-libsql": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@types/uuid": "^10.0.0",
+    "argon2": "^0.45.1",
+    "bullmq": "^6.0.0",
+    "cheerio": "^1.2.0",
+    "ioredis": "^5.11.1",
+    "jose": "^6.2.5",
+    "next": "16.2.12",
+    "next-intl": "^4.13.4",
+    "node-vibrant": "^4.0.4",
+    "prisma": "^7.9.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "recharts": "^3.10.1",
+    "uuid": "^14.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.1",
+    "typescript": "^5"
+  }
+}

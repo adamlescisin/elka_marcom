@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Brand {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  name         String
+  kind         String
+  websiteUrl   String
+  wooBaseUrl   String?
+  dna          String    @default("{}")
+  goldExamples String    @default("[]")
+  metaPageId   String?
+  igUserId     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  contents     Content[]
+}
+
+model Content {
+  id             String    @id @default(cuid())
+  brandId        String
+  brand          Brand     @relation(fields: [brandId], references: [id])
+  format         String
+  objective      String
+  briefPrompt    String
+  sourceUrl      String?
+  uploadedAssets String?
+  seedContentId  String?
+  copy           String    @default("{}")
+  assets         String    @default("[]")
+  status         String    @default("draft")
+  scheduledFor   DateTime?
+  postedAt       DateTime?
+  metaResult     String?
+  revisions      String    @default("[]")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Analytics {
+  id         String   @id @default(cuid())
+  contentId  String?
+  platform   String
+  metric     String
+  value      Int
+  capturedAt DateTime @default(now())
+}
+
+model MetaToken {
+  id          String   @id @default(cuid())
+  brandId     String   @unique
+  accessToken String
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
+}
