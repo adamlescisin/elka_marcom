@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  serverExternalPackages: ["argon2", "@prisma/client", "bullmq", "ioredis"],
+  serverExternalPackages: ["argon2", "@prisma/client", "bullmq", "ioredis", "@resvg/resvg-js", "satori"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.mimimami.cz" },
