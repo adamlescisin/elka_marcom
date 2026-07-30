@@ -47,6 +47,7 @@ export async function PATCH(
   if (body.status) updates.status = body.status;
   if (body.scheduledFor) updates.scheduledFor = new Date(body.scheduledFor);
   if (body.assets) updates.assets = JSON.stringify(body.assets);
+  if (body.uploadedAssets) updates.uploadedAssets = JSON.stringify(body.uploadedAssets);
 
   const updated = await prisma.content.update({ where: { id }, data: updates });
   return NextResponse.json(updated);

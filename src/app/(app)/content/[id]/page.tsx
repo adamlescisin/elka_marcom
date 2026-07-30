@@ -12,12 +12,14 @@ export default async function ContentDetailPage({ params }: { params: Promise<{ 
   if (!content) notFound();
 
   let copy = {};
-  let assets: unknown[] = [];
+  let assets: { type: string; path: string; url: string }[] = [];
   let revisions: unknown[] = [];
+  let uploadedAssets: { path: string; url: string; name: string }[] = [];
   try {
     copy = JSON.parse(content.copy);
     assets = JSON.parse(content.assets);
     revisions = JSON.parse(content.revisions);
+    if (content.uploadedAssets) uploadedAssets = JSON.parse(content.uploadedAssets);
   } catch {}
 
   const brands = await prisma.brand.findMany({ select: { id: true, name: true, slug: true } });
@@ -35,6 +37,7 @@ export default async function ContentDetailPage({ params }: { params: Promise<{ 
           copy,
           assets,
           revisions,
+          uploadedAssets,
           status: content.status,
           scheduledFor: content.scheduledFor?.toISOString() ?? null,
           postedAt: content.postedAt?.toISOString() ?? null,
