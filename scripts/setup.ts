@@ -25,9 +25,9 @@ async function main() {
   }
 
   const email = await rl.question("E-mail operátora: ");
-  const password = await rl.question("Heslo (min 12 znaků): ");
+  const password = await rl.question("Heslo (min 8 znaků): ");
 
-  if (password.length < 12) {
+  if (password.length < 8) {
     console.error("Heslo je příliš krátké.");
     process.exit(1);
   }

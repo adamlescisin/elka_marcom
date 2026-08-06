@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
   }
 
   const { email, password } = await request.json();
-  if (!email || !password || password.length < 12) {
+  if (!email || !password || password.length < 8) {
     return NextResponse.json(
-      { error: "Email and password (min 12 chars) required." },
+      { error: "Email and password (min 8 chars) required." },
       { status: 400 }
     );
   }
