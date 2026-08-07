@@ -76,17 +76,27 @@ async function loadPhotoBase64(photoPath?: string): Promise<string | null> {
   }
 }
 
+// Arial/Liberation have no emoji glyphs — strip them so Satori doesn't render boxes
+function stripEmoji(text: string): string {
+  return text
+    .replace(/\p{Emoji_Presentation}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function wrapText(text: string, maxLen: number): string {
-  if (text.length <= maxLen) return text;
-  return text.slice(0, maxLen - 1) + "…";
+  const clean = stripEmoji(text);
+  if (clean.length <= maxLen) return clean;
+  return clean.slice(0, maxLen - 1) + "…";
 }
 
 // ── Single-post template (1080×1080) ──────────────────────────────────────────
 async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<Buffer> {
-  const { copy, brandName, brandColors, photoPath } = input;
+  const { copy, brandColors, photoPath } = input;
+  const brandName = stripEmoji(input.brandName);
   const photoB64 = await loadPhotoBase64(photoPath);
   const caption = wrapText(copy.caption ?? "", 200);
-  const cta = copy.cta ?? "";
+  const cta = stripEmoji(copy.cta ?? "");
 
   const svg = await satori(
     ({
@@ -337,7 +347,7 @@ async function renderCarouselSlide(
                       lineHeight: 1.2,
                       margin: 0,
                     },
-                    children: slide.headline,
+                    children: stripEmoji(slide.headline),
                   },
                 },
                 slide.body
@@ -350,7 +360,7 @@ async function renderCarouselSlide(
                           lineHeight: 1.5,
                           margin: 0,
                         },
-                        children: wrapText(slide.body, 180),
+                        children: wrapText(slide.body ?? "", 180),
                       },
                     }
                   : null,
