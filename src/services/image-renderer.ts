@@ -6,13 +6,21 @@ import * as path from "path";
 import { v4 as uuid } from "uuid";
 import type { GeneratedCopy, CarouselSlide } from "@/types/brand";
 
+export interface ProductBadge {
+  name: string;
+  price: string;
+  originalPrice?: string; // set when on sale
+}
+
 export interface RenderInput {
   format: "single_post" | "carousel" | string;
   copy: GeneratedCopy;
   brandName: string;
   brandColors: { primary: string; accent: string };
-  photoPath?: string; // absolute path to uploaded photo
-  slideIndex?: number; // for carousel — which slide to render
+  photoPath?: string;    // absolute path to uploaded photo (takes priority)
+  photoUrl?: string;     // external image URL fallback (e.g. WooCommerce gallery)
+  productBadge?: ProductBadge;
+  slideIndex?: number;
 }
 
 export interface RenderResult {
@@ -64,16 +72,27 @@ async function getFont(): Promise<ArrayBuffer> {
   throw new Error("Nenalezen žádný font pro generování obrázků. Uložte Inter-Regular.ttf do assets/");
 }
 
-async function loadPhotoBase64(photoPath?: string): Promise<string | null> {
-  if (!photoPath) return null;
-  try {
-    const buf = await fs.readFile(photoPath);
-    const ext = path.extname(photoPath).toLowerCase().slice(1);
-    const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
-    return `data:${mime};base64,${buf.toString("base64")}`;
-  } catch {
-    return null;
+async function loadPhotoBase64(photoPath?: string, photoUrl?: string): Promise<string | null> {
+  // Uploaded file takes priority
+  if (photoPath) {
+    try {
+      const buf = await fs.readFile(photoPath);
+      const ext = path.extname(photoPath).toLowerCase().slice(1);
+      const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
+      return `data:${mime};base64,${buf.toString("base64")}`;
+    } catch {}
   }
+  // Fall back to fetching an external URL (e.g. WooCommerce product image)
+  if (photoUrl) {
+    try {
+      const res = await fetch(photoUrl, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return null;
+      const buf = Buffer.from(await res.arrayBuffer());
+      const mime = (res.headers.get("content-type") ?? "image/jpeg").split(";")[0].trim();
+      return `data:${mime};base64,${buf.toString("base64")}`;
+    } catch {}
+  }
+  return null;
 }
 
 // Arial/Liberation have no emoji glyphs — strip them so Satori doesn't render boxes
@@ -92,9 +111,9 @@ function wrapText(text: string, maxLen: number): string {
 
 // ── Single-post template (1080×1080) ──────────────────────────────────────────
 async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<Buffer> {
-  const { copy, brandColors, photoPath } = input;
+  const { copy, brandColors, photoPath, photoUrl, productBadge } = input;
   const brandName = stripEmoji(input.brandName);
-  const photoB64 = await loadPhotoBase64(photoPath);
+  const photoB64 = await loadPhotoBase64(photoPath, photoUrl);
   const caption = wrapText(copy.caption ?? "", 200);
   const cta = stripEmoji(copy.cta ?? "");
 
@@ -229,7 +248,60 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
               },
             },
           },
-        ],
+          // Product price badge (top-right, only when product data present)
+          productBadge
+            ? {
+                type: "div",
+                props: {
+                  style: {
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    position: "absolute",
+                    top: 56,
+                    right: 72,
+                  },
+                  children: [
+                    productBadge.originalPrice
+                      ? {
+                          type: "span",
+                          props: {
+                            style: {
+                              fontSize: 20,
+                              color: "rgba(255,255,255,0.6)",
+                              textDecoration: "line-through",
+                              marginBottom: 4,
+                            },
+                            children: productBadge.originalPrice,
+                          },
+                        }
+                      : null,
+                    {
+                      type: "div",
+                      props: {
+                        style: {
+                          display: "flex",
+                          backgroundColor: brandColors.accent,
+                          borderRadius: 32,
+                          paddingLeft: 20,
+                          paddingRight: 20,
+                          paddingTop: 10,
+                          paddingBottom: 10,
+                        },
+                        children: {
+                          type: "span",
+                          props: {
+                            style: { fontSize: 26, color: "#ffffff", fontWeight: 700 },
+                            children: productBadge.price,
+                          },
+                        },
+                      },
+                    },
+                  ].filter(Boolean),
+                },
+              }
+            : null,
+        ].filter(Boolean),
       },
     }) as ReactNode,
     {
@@ -427,7 +499,7 @@ async function renderCarouselSlide(
 export async function renderContentImage(input: RenderInput): Promise<RenderResult> {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
   const font = await getFont();
-  const photoB64 = await loadPhotoBase64(input.photoPath);
+  const photoB64 = await loadPhotoBase64(input.photoPath, input.photoUrl);
 
   const paths: string[] = [];
   const urls: string[] = [];
