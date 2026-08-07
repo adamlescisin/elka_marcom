@@ -4,7 +4,27 @@ import { prisma } from "@/lib/db";
 import { renderContentImage, defaultBrandColors } from "@/services/image-renderer";
 import type { ProductBadge } from "@/services/image-renderer";
 import { fetchWooProduct } from "@/services/woocommerce";
+import * as cheerio from "cheerio";
 import type { GeneratedCopy, BrandDNA } from "@/types/brand";
+
+async function scrapeProductImage(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    return (
+      $('meta[property="og:image"]').attr("content") ??
+      $('meta[name="twitter:image"]').attr("content") ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -36,23 +56,29 @@ export async function POST(
   let photoUrl: string | undefined;
   let productBadge: ProductBadge | undefined;
 
-  if (!photoPath && content.sourceUrl && content.brand.wooBaseUrl) {
-    const product = await fetchWooProduct(
-      content.sourceUrl,
-      content.brand.wooBaseUrl,
-      process.env.WOO_CONSUMER_KEY ?? "",
-      process.env.WOO_CONSUMER_SECRET ?? ""
-    );
-    if (product) {
-      photoUrl = product.images[0]?.src;
-      const priceFormatted = (p: string) => p ? `${Number(p).toLocaleString("cs-CZ")} Kč` : "";
-      productBadge = {
-        name: product.name,
-        price: priceFormatted(product.sale_price || product.price),
-        originalPrice: product.on_sale && product.regular_price
-          ? priceFormatted(product.regular_price)
-          : undefined,
-      };
+  if (!photoPath && content.sourceUrl) {
+    if (content.brand.wooBaseUrl) {
+      const product = await fetchWooProduct(
+        content.sourceUrl,
+        content.brand.wooBaseUrl,
+        process.env.WOO_CONSUMER_KEY ?? "",
+        process.env.WOO_CONSUMER_SECRET ?? ""
+      );
+      if (product) {
+        photoUrl = product.images[0]?.src;
+        const priceFormatted = (p: string) => p ? `${Number(p).toLocaleString("cs-CZ")} Kč` : "";
+        productBadge = {
+          name: product.name,
+          price: priceFormatted(product.sale_price || product.price),
+          originalPrice: product.on_sale && product.regular_price
+            ? priceFormatted(product.regular_price)
+            : undefined,
+        };
+      }
+    }
+    // Fallback: scrape og:image from the product page when no WooCommerce API or no image found
+    if (!photoUrl) {
+      photoUrl = (await scrapeProductImage(content.sourceUrl)) ?? undefined;
     }
   }
 
