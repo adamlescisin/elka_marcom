@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const filePath = path.join(UPLOAD_DIR, filename);
 
     await fs.writeFile(filePath, Buffer.from(bytes));
-    saved.push({ path: filePath, url: `/uploads/${filename}`, name: file.name });
+    saved.push({ path: filePath, url: `/api/uploads/${filename}`, name: file.name });
   }
 
   // If contentId provided, attach to content record

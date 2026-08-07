@@ -438,7 +438,7 @@ export async function renderContentImage(input: RenderInput): Promise<RenderResu
       const filePath = path.join(OUTPUT_DIR, filename);
       await fs.writeFile(filePath, png);
       paths.push(filePath);
-      urls.push(`/uploads/${filename}`);
+      urls.push(`/api/uploads/${filename}`);
     }
   } else {
     const png = await renderSinglePost(input, font);
@@ -446,7 +446,7 @@ export async function renderContentImage(input: RenderInput): Promise<RenderResu
     const filePath = path.join(OUTPUT_DIR, filename);
     await fs.writeFile(filePath, png);
     paths.push(filePath);
-    urls.push(`/uploads/${filename}`);
+    urls.push(`/api/uploads/${filename}`);
   }
 
   return { paths, urls };
