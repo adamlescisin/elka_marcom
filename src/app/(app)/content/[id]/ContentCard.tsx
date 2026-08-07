@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import type { GeneratedCopy, CarouselSlide } from "@/types/brand";
 
 type Brand = { id: string; name: string; slug: string };
@@ -388,13 +387,12 @@ export default function ContentCard({ content }: ContentCardProps) {
                     ))}
                   </div>
                 )}
-                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-zinc-800">
-                  <Image
+                <div className="aspect-square w-full overflow-hidden rounded-lg bg-zinc-800">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={generatedAssets[activeSlide]?.url ?? generatedAssets[0].url}
                     alt="Vygenerovaný vizuál"
-                    fill
-                    className="object-contain"
-                    unoptimized
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <a
@@ -444,12 +442,11 @@ export default function ContentCard({ content }: ContentCardProps) {
               <div className="grid grid-cols-3 gap-2">
                 {uploadedAssets.map((asset) => (
                   <div key={asset.url} className="relative group aspect-square">
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={asset.url}
                       alt={asset.name}
-                      fill
-                      className="object-cover rounded-lg"
-                      unoptimized
+                      className="w-full h-full object-cover rounded-lg"
                     />
                     <button
                       onClick={() => removeUploadedAsset(asset.url)}
