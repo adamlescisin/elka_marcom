@@ -7,22 +7,36 @@ import { fetchWooProduct } from "@/services/woocommerce";
 import * as cheerio from "cheerio";
 import type { GeneratedCopy, BrandDNA } from "@/types/brand";
 
-async function scrapeProductImage(url: string): Promise<string | null> {
+interface ScrapeResult {
+  imageUrl: string | null;
+  status?: number;
+  error?: string;
+}
+
+async function scrapeProductImage(url: string): Promise<ScrapeResult> {
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      signal: AbortSignal.timeout(8000),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "cs,en;q=0.8",
+      },
+      signal: AbortSignal.timeout(10000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) return { imageUrl: null, status: res.status, error: `HTTP ${res.status}` };
     const html = await res.text();
     const $ = cheerio.load(html);
-    return (
+    const imageUrl =
       $('meta[property="og:image"]').attr("content") ??
+      $('meta[property="og:image:url"]').attr("content") ??
       $('meta[name="twitter:image"]').attr("content") ??
-      null
-    );
-  } catch {
-    return null;
+      $('meta[name="twitter:image:src"]').attr("content") ??
+      // WooCommerce product gallery — first full-size image
+      $('.woocommerce-product-gallery__image a').first().attr("href") ??
+      null;
+    return { imageUrl, status: res.status };
+  } catch (e) {
+    return { imageUrl: null, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -55,6 +69,7 @@ export async function POST(
   // When no uploaded photo but a product URL exists, fetch product image + badge
   let photoUrl: string | undefined;
   let productBadge: ProductBadge | undefined;
+  let scrapeResult: ScrapeResult | null = null;
 
   if (!photoPath && content.sourceUrl) {
     if (content.brand.wooBaseUrl) {
@@ -78,7 +93,8 @@ export async function POST(
     }
     // Fallback: scrape og:image from the product page when no WooCommerce API or no image found
     if (!photoUrl) {
-      photoUrl = (await scrapeProductImage(content.sourceUrl)) ?? undefined;
+      scrapeResult = await scrapeProductImage(content.sourceUrl);
+      photoUrl = scrapeResult.imageUrl ?? undefined;
     }
   }
 
@@ -87,8 +103,9 @@ export async function POST(
     hasUploadedPhoto: !!photoPath,
     sourceUrl: content.sourceUrl,
     wooBaseUrl: content.brand.wooBaseUrl,
-    resolvedPhotoUrl: photoUrl,
+    resolvedPhotoUrl: photoUrl ?? null,
     hasProductBadge: !!productBadge,
+    scrape: scrapeResult,
   };
 
   try {
