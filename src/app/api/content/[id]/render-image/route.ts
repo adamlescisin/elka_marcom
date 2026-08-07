@@ -56,6 +56,15 @@ export async function POST(
     }
   }
 
+  // Temporary: surface product-fetch diagnostics in response
+  const _diag = {
+    hasUploadedPhoto: !!photoPath,
+    sourceUrl: content.sourceUrl,
+    wooBaseUrl: content.brand.wooBaseUrl,
+    resolvedPhotoUrl: photoUrl,
+    hasProductBadge: !!productBadge,
+  };
+
   try {
     const result = await renderContentImage({
       format: content.format,
@@ -79,7 +88,7 @@ export async function POST(
       data: { assets: JSON.stringify(assets) },
     });
 
-    return NextResponse.json({ ok: true, urls: result.urls, assets });
+    return NextResponse.json({ ok: true, urls: result.urls, assets, _diag });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Chyba renderování.";
     return NextResponse.json({ error: message }, { status: 500 });
