@@ -29,9 +29,15 @@ async function getFont(): Promise<ArrayBuffer> {
   if (fontData) return fontData;
   // Use system font fallback path — on Mac/Linux
   const candidates = [
+    // macOS system fonts (multiple common paths across versions)
     "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "/Library/Fonts/Arial.ttf",
+    "/System/Library/Fonts/Arial.ttf",
+    // Linux
     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+    // Project-local asset
     path.join(process.cwd(), "assets", "Inter-Regular.ttf"),
   ];
   for (const p of candidates) {

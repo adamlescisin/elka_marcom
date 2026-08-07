@@ -23,6 +23,7 @@ export async function ollamaChat(
       model: options.model ?? DEFAULT_MODEL,
       messages,
       stream: false,
+      think: false, // disable thinking mode for qwen3 and similar models
       options: {
         temperature: options.temperature ?? 0.7,
         num_ctx: options.num_ctx ?? 8192,
@@ -36,7 +37,9 @@ export async function ollamaChat(
   }
 
   const data = await response.json();
-  return data.message?.content ?? "";
+  // Strip <think>...</think> blocks that reasoning models emit before their answer
+  const content: string = data.message?.content ?? "";
+  return content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 }
 
 export async function ollamaGenerate(
