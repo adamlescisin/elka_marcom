@@ -80,6 +80,8 @@ export default function ContentCard({ content }: ContentCardProps) {
   );
   const [activeSlide, setActiveSlide] = useState(0);
   const [showRevisions, setShowRevisions] = useState(false);
+  const [photoPrompt, setPhotoPrompt] = useState(copy.image_brief ?? "");
+  const [generatingPhoto, setGeneratingPhoto] = useState(false);
 
   function flash(msg: string) {
     setMessage(msg);
@@ -128,6 +130,25 @@ export default function ContentCard({ content }: ContentCardProps) {
       flash(data.error ?? "Chyba generování obrázku.");
     }
     setRendering(false);
+  }
+
+  async function generateAiPhoto() {
+    if (!photoPrompt.trim()) return;
+    setGeneratingPhoto(true);
+    const res = await fetch(`/api/content/${content.id}/generate-photo`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: photoPrompt }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUploadedAssets((prev) => [...prev, data.file]);
+      flash("AI fotka vygenerována!");
+    } else {
+      const data = await res.json();
+      flash(data.error ?? "Chyba generování AI fotky.");
+    }
+    setGeneratingPhoto(false);
   }
 
   async function uploadPhotos(files: FileList) {
@@ -415,6 +436,34 @@ export default function ContentCard({ content }: ContentCardProps) {
                 </p>
               </div>
             )}
+          </div>
+
+          {/* AI photo generation */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+            <label className="text-sm font-medium text-zinc-300 block mb-3">AI fotka</label>
+            <div className="flex gap-2">
+              <input
+                value={photoPrompt}
+                onChange={(e) => setPhotoPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && generateAiPhoto()}
+                placeholder="Popis scény, např. matka s dítětem v obchodě s oblečením…"
+                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={generateAiPhoto}
+                disabled={generatingPhoto || !photoPrompt.trim()}
+                className="text-xs bg-violet-700 hover:bg-violet-600 disabled:opacity-50 text-white px-3 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1"
+              >
+                {generatingPhoto ? (
+                  <><span className="animate-spin inline-block">◌</span> Generuji…</>
+                ) : (
+                  "Vygenerovat"
+                )}
+              </button>
+            </div>
+            <p className="text-xs text-zinc-600 mt-2">
+              Flux Schnell · obrázek se přidá do fotek níže a použije při generování vizuálu
+            </p>
           </div>
 
           {/* Photo upload */}
