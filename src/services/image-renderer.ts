@@ -534,7 +534,7 @@ export async function renderContentImage(input: RenderInput): Promise<RenderResu
     for (let i = 0; i < slides.length; i++) {
       // Per-slide photo: use photoPaths[i] if available, else fall back to shared photo
       const slidePhotoB64 = input.photoPaths?.[i]
-        ? await loadPhotoBase64(input.photoPaths[i])
+        ? (await loadPhotoBase64(input.photoPaths[i])) ?? photoB64
         : photoB64;
       const png = await renderCarouselSlide(
         slides[i],

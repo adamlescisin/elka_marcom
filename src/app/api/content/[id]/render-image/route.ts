@@ -66,30 +66,23 @@ export async function POST(
     }
   }
 
-  // Verify the photo file is actually readable and can become a data URI
-  let photoFileSize: number | null = null;
-  let photoReadError: string | null = null;
-  let photoB64Length: number | null = null;
-  if (photoPath) {
-    try {
-      const fsp = await import("fs/promises");
-      const stat = await fsp.stat(photoPath);
-      photoFileSize = stat.size;
-      const buf = await fsp.readFile(photoPath);
-      const b64 = buf.toString("base64");
-      photoB64Length = b64.length;
-    } catch (e) {
-      photoReadError = e instanceof Error ? e.message : String(e);
-    }
-  }
+  // Verify all uploaded asset paths are readable
+  const fsp = await import("fs/promises");
+  const uploadedAssetsDiag = await Promise.all(
+    uploadedAssets.map(async (a, i) => {
+      try {
+        const stat = await fsp.stat(a.path);
+        return { i, path: a.path, size: stat.size, ok: true };
+      } catch (e) {
+        return { i, path: a.path, size: null, ok: false, err: e instanceof Error ? e.message : String(e) };
+      }
+    })
+  );
 
   // Temporary: surface product-fetch diagnostics in response
   const _diag = {
     uploadedAssetsCount: uploadedAssets.length,
-    photoPath: photoPath ?? null,
-    photoFileSize,
-    photoB64Length,
-    photoReadError,
+    uploadedAssetsDiag,
     hasUploadedPhoto: !!photoPath,
     sourceUrl: content.sourceUrl,
     wooBaseUrl: content.brand.wooBaseUrl,
