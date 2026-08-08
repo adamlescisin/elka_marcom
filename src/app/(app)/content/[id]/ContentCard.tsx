@@ -143,9 +143,11 @@ export default function ContentCard({ content }: ContentCardProps) {
     });
     if (res.ok) {
       const data = await res.json();
-      setUploadedAssets((prev) => [...prev, data.file]);
+      const newFiles = data.files ?? (data.file ? [data.file] : []);
+      setUploadedAssets((prev) => [...prev, ...newFiles]);
       setPhotoMode(data.mode ?? null);
-      flash(data.mode === "img2img" ? "AI fotka vygenerována z produktové fotky!" : "AI fotka vygenerována!");
+      const label = data.mode === "img2img" ? "z produktové fotky" : "";
+      flash(`${newFiles.length} AI ${newFiles.length === 1 ? "fotka" : "fotky"} vygenerovány ${label}`.trim() + "!");
     } else {
       const data = await res.json();
       flash(data.error ?? "Chyba generování AI fotky.");
@@ -465,9 +467,10 @@ export default function ContentCard({ content }: ContentCardProps) {
             </div>
             <p className="text-xs text-zinc-600 mt-2">
               {content.sourceUrl
-                ? "Flux Dev img2img · použije produktovou fotku z URL jako referenci"
+                ? "Flux Dev img2img · každý snímek karuselu dostane vlastní obrázek z galerie produktu"
                 : "Flux Schnell · čistá generace z textu"}
-              {" · "}obrázek se přidá do fotek níže a použije při generování vizuálu
+              {isCarousel ? ` · ${slides.length} obrázků` : ""}
+              {" · "}obrázky se přidají do fotek níže
             </p>
             {photoMode && (
               <p className="text-xs text-violet-400 mt-1">

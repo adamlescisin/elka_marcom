@@ -32,6 +32,7 @@ export async function POST(
 
   const brandColors = defaultBrandColors(dna);
   const photoPath = uploadedAssets[0]?.path;
+  const photoPaths = uploadedAssets.map((a) => a.path);
 
   // When no uploaded photo but a product URL exists, fetch product image + badge
   let photoUrl: string | undefined;
@@ -104,6 +105,7 @@ export async function POST(
       brandName: content.brand.name,
       brandColors,
       photoPath,
+      photoPaths: photoPaths.length > 1 ? photoPaths : undefined,
       photoUrl,
       productBadge,
     });

@@ -19,6 +19,7 @@ export interface RenderInput {
   brandColors: { primary: string; accent: string };
   photoPath?: string;    // absolute path to uploaded photo (takes priority)
   photoUrl?: string;     // external image URL fallback (e.g. WooCommerce gallery)
+  photoPaths?: string[]; // per-slide paths for carousel (index matches slide index)
   productBadge?: ProductBadge;
   slideIndex?: number;
 }
@@ -513,6 +514,10 @@ export async function renderContentImage(input: RenderInput): Promise<RenderResu
   if (input.format === "carousel" && input.copy.carousel_slides?.length) {
     const slides = input.copy.carousel_slides;
     for (let i = 0; i < slides.length; i++) {
+      // Per-slide photo: use photoPaths[i] if available, else fall back to shared photo
+      const slidePhotoB64 = input.photoPaths?.[i]
+        ? await loadPhotoBase64(input.photoPaths[i])
+        : photoB64;
       const png = await renderCarouselSlide(
         slides[i],
         i,
@@ -520,7 +525,7 @@ export async function renderContentImage(input: RenderInput): Promise<RenderResu
         input.brandName,
         input.brandColors,
         font,
-        photoB64
+        slidePhotoB64
       );
       const filename = `${uuid()}.png`;
       const filePath = path.join(OUTPUT_DIR, filename);
