@@ -98,10 +98,24 @@ export async function POST(
     }
   }
 
+  // Verify the photo file is actually readable
+  let photoFileSize: number | null = null;
+  let photoReadError: string | null = null;
+  if (photoPath) {
+    try {
+      const stat = await import("fs/promises").then(m => m.stat(photoPath));
+      photoFileSize = stat.size;
+    } catch (e) {
+      photoReadError = e instanceof Error ? e.message : String(e);
+    }
+  }
+
   // Temporary: surface product-fetch diagnostics in response
   const _diag = {
     uploadedAssetsCount: uploadedAssets.length,
     photoPath: photoPath ?? null,
+    photoFileSize,
+    photoReadError,
     hasUploadedPhoto: !!photoPath,
     sourceUrl: content.sourceUrl,
     wooBaseUrl: content.brand.wooBaseUrl,
