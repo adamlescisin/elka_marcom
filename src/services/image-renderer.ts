@@ -229,32 +229,6 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
               ].filter(Boolean),
             },
           },
-          // Brand name chip
-          {
-            type: "div",
-            props: {
-              style: {
-                display: "flex",
-                alignItems: "center",
-                position: "absolute",
-                top: 56,
-                left: 72,
-                backgroundColor: "rgba(255,255,255,0.15)",
-                borderRadius: 32,
-                paddingLeft: 24,
-                paddingRight: 24,
-                paddingTop: 10,
-                paddingBottom: 10,
-              },
-              children: {
-                type: "span",
-                props: {
-                  style: { fontSize: 24, color: "#ffffff", fontWeight: 600 },
-                  children: brandName,
-                },
-              },
-            },
-          },
           // Product price badge (top-right, only when product data present)
           productBadge
             ? {
@@ -486,25 +460,6 @@ async function renderCarouselSlide(
                   },
                 },
               ],
-            },
-          },
-          // Brand name
-          {
-            type: "div",
-            props: {
-              style: {
-                display: "flex",
-                alignItems: "center",
-                position: "absolute",
-                top: 52,
-                left: isFirst ? 72 : (!isFirst && photoB64 ? 60 : 80),
-                fontSize: 22,
-                color: isFirst || (!isFirst && photoB64)
-                  ? "rgba(255,255,255,0.9)"
-                  : brandColors.accent,
-                fontWeight: 600,
-              },
-              children: brandName,
             },
           },
         ].filter(Boolean),
