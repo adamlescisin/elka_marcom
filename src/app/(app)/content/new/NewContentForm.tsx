@@ -58,7 +58,7 @@ export default function NewContentForm({
         format,
         objective,
         briefPrompt,
-        sourceUrl: isEcommerce ? sourceUrl : undefined,
+        sourceUrl: sourceUrl || undefined,
         numSlides: isCarousel ? numSlides : undefined,
       }),
     });
@@ -149,22 +149,23 @@ export default function NewContentForm({
         </select>
       </div>
 
-      {/* Product URL (mimimami only) */}
-      {isEcommerce && (
-        <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1.5">
-            URL produktu{" "}
-            <span className="text-zinc-500 font-normal">(volitelné)</span>
-          </label>
-          <input
-            type="url"
-            value={sourceUrl}
-            onChange={(e) => setSourceUrl(e.target.value)}
-            placeholder="https://mimimami.cz/produkt/..."
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-      )}
+      {/* Product / page URL */}
+      <div>
+        <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+          URL produktu nebo stránky{" "}
+          <span className="text-zinc-500 font-normal">(volitelné)</span>
+        </label>
+        <input
+          type="url"
+          value={sourceUrl}
+          onChange={(e) => setSourceUrl(e.target.value)}
+          placeholder="https://example.cz/produkt/..."
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <p className="text-xs text-zinc-600 mt-1">
+          Fotka produktu z URL bude použita jako reference při generování AI vizuálu.
+        </p>
+      </div>
 
       {/* Brief */}
       <div>

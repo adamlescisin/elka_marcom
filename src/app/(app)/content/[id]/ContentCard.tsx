@@ -82,6 +82,7 @@ export default function ContentCard({ content }: ContentCardProps) {
   const [showRevisions, setShowRevisions] = useState(false);
   const [photoPrompt, setPhotoPrompt] = useState(copy.image_brief ?? "");
   const [generatingPhoto, setGeneratingPhoto] = useState(false);
+  const [photoMode, setPhotoMode] = useState<"img2img" | "text2img" | null>(null);
 
   function flash(msg: string) {
     setMessage(msg);
@@ -143,7 +144,8 @@ export default function ContentCard({ content }: ContentCardProps) {
     if (res.ok) {
       const data = await res.json();
       setUploadedAssets((prev) => [...prev, data.file]);
-      flash("AI fotka vygenerována!");
+      setPhotoMode(data.mode ?? null);
+      flash(data.mode === "img2img" ? "AI fotka vygenerována z produktové fotky!" : "AI fotka vygenerována!");
     } else {
       const data = await res.json();
       flash(data.error ?? "Chyba generování AI fotky.");
@@ -462,8 +464,16 @@ export default function ContentCard({ content }: ContentCardProps) {
               </button>
             </div>
             <p className="text-xs text-zinc-600 mt-2">
-              Flux Schnell · obrázek se přidá do fotek níže a použije při generování vizuálu
+              {content.sourceUrl
+                ? "Flux Dev img2img · použije produktovou fotku z URL jako referenci"
+                : "Flux Schnell · čistá generace z textu"}
+              {" · "}obrázek se přidá do fotek níže a použije při generování vizuálu
             </p>
+            {photoMode && (
+              <p className="text-xs text-violet-400 mt-1">
+                {photoMode === "img2img" ? "Poslední generace: produktová reference (img2img)" : "Poslední generace: text-to-image"}
+              </p>
+            )}
           </div>
 
           {/* Photo upload */}
