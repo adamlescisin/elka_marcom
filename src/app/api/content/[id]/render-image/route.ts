@@ -98,13 +98,18 @@ export async function POST(
     }
   }
 
-  // Verify the photo file is actually readable
+  // Verify the photo file is actually readable and can become a data URI
   let photoFileSize: number | null = null;
   let photoReadError: string | null = null;
+  let photoB64Length: number | null = null;
   if (photoPath) {
     try {
-      const stat = await import("fs/promises").then(m => m.stat(photoPath));
+      const fsp = await import("fs/promises");
+      const stat = await fsp.stat(photoPath);
       photoFileSize = stat.size;
+      const buf = await fsp.readFile(photoPath);
+      const b64 = buf.toString("base64");
+      photoB64Length = b64.length;
     } catch (e) {
       photoReadError = e instanceof Error ? e.message : String(e);
     }
@@ -115,6 +120,7 @@ export async function POST(
     uploadedAssetsCount: uploadedAssets.length,
     photoPath: photoPath ?? null,
     photoFileSize,
+    photoB64Length,
     photoReadError,
     hasUploadedPhoto: !!photoPath,
     sourceUrl: content.sourceUrl,
