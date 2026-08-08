@@ -348,8 +348,8 @@ async function renderCarouselSlide(
           overflow: "hidden",
         },
         children: [
-          // Cover slide: photo + title
-          isFirst && photoB64
+          // Photo background (all slides when photo available)
+          photoB64
             ? {
                 type: "img",
                 props: {
@@ -359,14 +359,15 @@ async function renderCarouselSlide(
                     top: 0,
                     left: 0,
                     width: 1080,
-                    height: 1080,
+                    // Cover slides: full bleed; content slides: top half
+                    height: isFirst ? 1080 : 520,
                     objectFit: "cover",
-                    opacity: 0.45,
+                    opacity: isFirst ? 0.45 : 1,
                   },
                 },
               }
             : null,
-          // Dark overlay for text readability on first slide
+          // Gradient overlay — full-slide dark fade for cover, bottom-up fade for content slides with photo
           isFirst
             ? {
                 type: "div",
@@ -382,9 +383,24 @@ async function renderCarouselSlide(
                   },
                 },
               }
+            : !isFirst && photoB64
+            ? {
+                type: "div",
+                props: {
+                  style: {
+                    display: "flex",
+                    position: "absolute",
+                    top: 380,
+                    left: 0,
+                    right: 0,
+                    height: 140,
+                    backgroundImage: "linear-gradient(transparent, #ffffff)",
+                  },
+                },
+              }
             : null,
-          // Accent bar on non-cover slides
-          !isFirst
+          // Accent bar on non-cover slides without photo
+          !isFirst && !photoB64
             ? {
                 type: "div",
                 props: {
@@ -400,27 +416,27 @@ async function renderCarouselSlide(
                 },
               }
             : null,
-          // Content
+          // Content — on photo content slides sits in the bottom half
           {
             type: "div",
             props: {
               style: {
                 position: "absolute",
                 bottom: isFirst ? 80 : 0,
-                ...(isFirst ? {} : { top: 0 }),
-                left: isFirst ? 72 : 80,
-                right: 72,
+                ...(!isFirst && photoB64 ? { top: 500 } : !isFirst ? { top: 0 } : {}),
+                left: isFirst ? 72 : (!isFirst && photoB64 ? 60 : 80),
+                right: isFirst ? 72 : 60,
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: isFirst ? "flex-end" : "center",
-                gap: 24,
+                gap: 20,
               },
               children: [
                 {
                   type: "p",
                   props: {
                     style: {
-                      fontSize: isFirst ? 52 : 48,
+                      fontSize: isFirst ? 52 : 44,
                       fontWeight: 700,
                       color: isFirst ? "#ffffff" : "#111111",
                       lineHeight: 1.2,
@@ -434,12 +450,12 @@ async function renderCarouselSlide(
                       type: "p",
                       props: {
                         style: {
-                          fontSize: 30,
+                          fontSize: 28,
                           color: isFirst ? "rgba(255,255,255,0.85)" : "#444444",
                           lineHeight: 1.5,
                           margin: 0,
                         },
-                        children: wrapText(slide.body ?? "", 180),
+                        children: wrapText(slide.body ?? "", 160),
                       },
                     }
                   : null,
@@ -464,7 +480,7 @@ async function renderCarouselSlide(
                   props: {
                     style: {
                       fontSize: 22,
-                      color: isFirst ? "rgba(255,255,255,0.7)" : "#999999",
+                      color: isFirst || photoB64 ? "rgba(255,255,255,0.9)" : "#999999",
                     },
                     children: `${slideIndex + 1} / ${totalSlides}`,
                   },
@@ -481,9 +497,11 @@ async function renderCarouselSlide(
                 alignItems: "center",
                 position: "absolute",
                 top: 52,
-                left: isFirst ? 72 : 80,
+                left: isFirst ? 72 : (!isFirst && photoB64 ? 60 : 80),
                 fontSize: 22,
-                color: isFirst ? "rgba(255,255,255,0.8)" : brandColors.accent,
+                color: isFirst || (!isFirst && photoB64)
+                  ? "rgba(255,255,255,0.9)"
+                  : brandColors.accent,
                 fontWeight: 600,
               },
               children: brandName,
