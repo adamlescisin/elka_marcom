@@ -100,6 +100,8 @@ export async function POST(
 
   // Temporary: surface product-fetch diagnostics in response
   const _diag = {
+    uploadedAssetsCount: uploadedAssets.length,
+    photoPath: photoPath ?? null,
     hasUploadedPhoto: !!photoPath,
     sourceUrl: content.sourceUrl,
     wooBaseUrl: content.brand.wooBaseUrl,
