@@ -407,7 +407,7 @@ async function renderCarouselSlide(
               style: {
                 position: "absolute",
                 bottom: isFirst ? 80 : 0,
-                top: isFirst ? "auto" : 0,
+                ...(isFirst ? {} : { top: 0 }),
                 left: isFirst ? 72 : 80,
                 right: 72,
                 display: "flex",
