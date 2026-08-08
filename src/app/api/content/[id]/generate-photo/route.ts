@@ -51,7 +51,9 @@ export async function POST(
 
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
     const buf = Buffer.from(await imgRes.arrayBuffer());
-    const filename = `${uuid()}.png`;
+    const ct = (imgRes.headers.get("content-type") ?? "image/png").split(";")[0].trim();
+    const ext = ct === "image/jpeg" ? "jpg" : ct === "image/webp" ? "webp" : "png";
+    const filename = `${uuid()}.${ext}`;
     const filePath = path.join(UPLOAD_DIR, filename);
     await fs.writeFile(filePath, buf);
 

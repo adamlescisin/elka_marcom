@@ -72,13 +72,19 @@ async function getFont(): Promise<ArrayBuffer> {
   throw new Error("Nenalezen žádný font pro generování obrázků. Uložte Inter-Regular.ttf do assets/");
 }
 
+function detectMime(buf: Buffer): string {
+  if (buf[0] === 0xff && buf[1] === 0xd8) return "image/jpeg";
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return "image/png";
+  if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46) return "image/webp";
+  return "image/jpeg";
+}
+
 async function loadPhotoBase64(photoPath?: string, photoUrl?: string): Promise<string | null> {
   // Uploaded file takes priority
   if (photoPath) {
     try {
       const buf = await fs.readFile(photoPath);
-      const ext = path.extname(photoPath).toLowerCase().slice(1);
-      const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
+      const mime = detectMime(buf);
       return `data:${mime};base64,${buf.toString("base64")}`;
     } catch {}
   }
@@ -88,7 +94,7 @@ async function loadPhotoBase64(photoPath?: string, photoUrl?: string): Promise<s
       const res = await fetch(photoUrl, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) return null;
       const buf = Buffer.from(await res.arrayBuffer());
-      const mime = (res.headers.get("content-type") ?? "image/jpeg").split(";")[0].trim();
+      const mime = detectMime(buf);
       return `data:${mime};base64,${buf.toString("base64")}`;
     } catch {}
   }
