@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { GeneratedCopy, CarouselSlide } from "@/types/brand";
+import type { GeneratedCopy, CarouselSlide, BrandStyle } from "@/types/brand";
 
 type Brand = { id: string; name: string; slug: string };
 
@@ -36,6 +36,7 @@ interface ContentCardProps {
     brand: Brand & { kind: string };
     revisions: unknown[];
     uploadedAssets?: UploadedAsset[];
+    styleOverrides?: BrandStyle;
   };
   brands: Brand[];
 }
@@ -83,6 +84,9 @@ export default function ContentCard({ content }: ContentCardProps) {
   const [photoPrompt, setPhotoPrompt] = useState(copy.image_brief ?? "");
   const [generatingPhoto, setGeneratingPhoto] = useState(false);
   const [photoMode, setPhotoMode] = useState<"img2img" | "text2img" | null>(null);
+  const [styleOverrides, setStyleOverrides] = useState<BrandStyle>(content.styleOverrides ?? {});
+  const [savingStyle, setSavingStyle] = useState(false);
+  const [showStylePanel, setShowStylePanel] = useState(false);
 
   function flash(msg: string) {
     setMessage(msg);
@@ -220,6 +224,21 @@ export default function ContentCard({ content }: ContentCardProps) {
       const data = await res.json();
       flash(data.error ?? "Chyba zveřejnění.");
     }
+  }
+
+  async function saveStyleOverrides() {
+    setSavingStyle(true);
+    const res = await fetch(`/api/content/${content.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ styleOverrides }),
+    });
+    flash(res.ok ? "Styl uložen." : "Chyba ukládání stylu.");
+    setSavingStyle(false);
+  }
+
+  function updateStyle(key: keyof BrandStyle, value: string) {
+    setStyleOverrides((prev) => ({ ...prev, [key]: value }));
   }
 
   function updateSlide(index: number, field: keyof CarouselSlide, value: string) {
@@ -522,6 +541,96 @@ export default function ContentCard({ content }: ContentCardProps) {
             ) : (
               <p className="text-sm text-zinc-600">
                 Žádné fotky. Pro ELKA nebo produktové příspěvky nahrajte fotku pro vizuál.
+              </p>
+            )}
+          </div>
+
+          {/* Per-post style overrides */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-medium text-zinc-300">Styl vizuálu</label>
+              <button
+                onClick={() => setShowStylePanel(!showStylePanel)}
+                className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {showStylePanel ? "Skrýt" : "Upravit"}
+              </button>
+            </div>
+
+            {showStylePanel && (
+              <div className="space-y-4">
+                <p className="text-xs text-zinc-600">
+                  Přepíše výchozí barvy a fonty ze značky jen pro tento příspěvek.
+                </p>
+
+                {/* Colors */}
+                <div className="grid grid-cols-3 gap-3">
+                  {(
+                    [
+                      { key: "backgroundColor" as keyof BrandStyle, label: "Pozadí", default: "#1a1a2e" },
+                      { key: "headingColor" as keyof BrandStyle, label: "Nadpis", default: "#ffffff" },
+                      { key: "textColor" as keyof BrandStyle, label: "Text", default: "#cccccc" },
+                    ]
+                  ).map(({ key, label, default: def }) => {
+                    const val = (styleOverrides[key] as string) || def;
+                    return (
+                      <div key={key}>
+                        <label className="block text-xs text-zinc-500 mb-1">{label}</label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="color"
+                            value={val}
+                            onChange={(e) => updateStyle(key, e.target.value)}
+                            className="h-8 w-9 rounded cursor-pointer border border-zinc-600 bg-zinc-800 p-0.5"
+                          />
+                          <input
+                            type="text"
+                            value={val}
+                            onChange={(e) => updateStyle(key, e.target.value)}
+                            className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-100 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Fonts */}
+                <div className="grid grid-cols-2 gap-3">
+                  {(
+                    [
+                      { key: "headingFont" as keyof BrandStyle, label: "Font nadpisu", placeholder: "Playfair Display" },
+                      { key: "textFont" as keyof BrandStyle, label: "Font textu", placeholder: "Lato" },
+                    ]
+                  ).map(({ key, label, placeholder }) => (
+                    <div key={key}>
+                      <label className="block text-xs text-zinc-500 mb-1">{label}</label>
+                      <input
+                        type="text"
+                        value={(styleOverrides[key] as string) ?? ""}
+                        onChange={(e) => updateStyle(key, e.target.value)}
+                        placeholder={placeholder}
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-zinc-100 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={saveStyleOverrides}
+                  disabled={savingStyle}
+                  className="w-full bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 text-zinc-100 text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+                >
+                  {savingStyle ? "Ukládám…" : "Uložit styl"}
+                </button>
+              </div>
+            )}
+
+            {!showStylePanel && (
+              <p className="text-xs text-zinc-600">
+                {Object.keys(styleOverrides).length > 0
+                  ? `${Object.keys(styleOverrides).length} přepsaných hodnot`
+                  : "Výchozí styl ze značky"}
               </p>
             )}
           </div>

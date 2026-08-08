@@ -4,7 +4,7 @@ import { Resvg } from "@resvg/resvg-js";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
-import type { GeneratedCopy, CarouselSlide } from "@/types/brand";
+import type { GeneratedCopy, CarouselSlide, BrandStyle } from "@/types/brand";
 
 export interface ProductBadge {
   name: string;
@@ -22,6 +22,7 @@ export interface RenderInput {
   photoPaths?: string[]; // per-slide paths for carousel (index matches slide index)
   productBadge?: ProductBadge;
   slideIndex?: number;
+  style?: BrandStyle;    // visual overrides (from brand DNA or per-post)
 }
 
 export interface RenderResult {
@@ -118,11 +119,15 @@ function wrapText(text: string, maxLen: number): string {
 
 // ── Single-post template (1080×1080) ──────────────────────────────────────────
 async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<Buffer> {
-  const { copy, brandColors, photoPath, photoUrl, productBadge } = input;
+  const { copy, brandColors, photoPath, photoUrl, productBadge, style } = input;
   const brandName = stripEmoji(input.brandName);
   const photoB64 = await loadPhotoBase64(photoPath, photoUrl);
   const caption = wrapText(copy.caption ?? "", 200);
   const cta = stripEmoji(copy.cta ?? "");
+
+  const bgColor = style?.backgroundColor ?? brandColors.primary;
+  const headingColor = style?.headingColor ?? "#ffffff";
+  const textColor = style?.textColor ?? brandColors.accent;
 
   const svg = await satori(
     ({
@@ -131,7 +136,7 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
         style: {
           width: 1080,
           height: 1080,
-          backgroundColor: brandColors.primary,
+          backgroundColor: bgColor,
           display: "flex",
           flexDirection: "column",
           fontFamily: "Inter, Arial, sans-serif",
@@ -166,7 +171,7 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
                     left: 0,
                     width: 1080,
                     height: 1080,
-                    backgroundImage: `linear-gradient(135deg, ${brandColors.primary} 0%, ${brandColors.accent} 100%)`,
+                    backgroundImage: `linear-gradient(135deg, ${bgColor} 0%, ${brandColors.accent} 100%)`,
                   },
                 },
               },
@@ -205,7 +210,7 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
                     style: {
                       fontSize: 42,
                       fontWeight: 700,
-                      color: "#ffffff",
+                      color: headingColor,
                       lineHeight: 1.25,
                       margin: 0,
                     },
@@ -218,7 +223,7 @@ async function renderSinglePost(input: RenderInput, font: ArrayBuffer): Promise<
                       props: {
                         style: {
                           fontSize: 28,
-                          color: brandColors.accent,
+                          color: textColor,
                           fontWeight: 600,
                           margin: 0,
                         },
@@ -303,9 +308,14 @@ async function renderCarouselSlide(
   brandName: string,
   brandColors: { primary: string; accent: string },
   font: ArrayBuffer,
-  photoB64: string | null
+  photoB64: string | null,
+  style?: BrandStyle
 ): Promise<Buffer> {
   const isFirst = slideIndex === 0;
+
+  const bgColor = style?.backgroundColor ?? brandColors.primary;
+  const headingColor = style?.headingColor ?? (isFirst ? "#ffffff" : "#111111");
+  const textColor = style?.textColor ?? (isFirst ? "rgba(255,255,255,0.85)" : "#444444");
 
   const svg = await satori(
     ({
@@ -314,7 +324,7 @@ async function renderCarouselSlide(
         style: {
           width: 1080,
           height: 1080,
-          backgroundColor: isFirst ? brandColors.primary : "#ffffff",
+          backgroundColor: isFirst ? bgColor : (style?.backgroundColor ? bgColor : "#ffffff"),
           display: "flex",
           flexDirection: "column",
           fontFamily: "Inter, Arial, sans-serif",
@@ -412,7 +422,7 @@ async function renderCarouselSlide(
                     style: {
                       fontSize: isFirst ? 52 : 44,
                       fontWeight: 700,
-                      color: isFirst ? "#ffffff" : "#111111",
+                      color: headingColor,
                       lineHeight: 1.2,
                       margin: 0,
                     },
@@ -425,7 +435,7 @@ async function renderCarouselSlide(
                       props: {
                         style: {
                           fontSize: 28,
-                          color: isFirst ? "rgba(255,255,255,0.85)" : "#444444",
+                          color: textColor,
                           lineHeight: 1.5,
                           margin: 0,
                         },
@@ -498,7 +508,8 @@ export async function renderContentImage(input: RenderInput): Promise<RenderResu
         input.brandName,
         input.brandColors,
         font,
-        slidePhotoB64
+        slidePhotoB64,
+        input.style
       );
       const filename = `${uuid()}.png`;
       const filePath = path.join(OUTPUT_DIR, filename);

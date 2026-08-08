@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { BrandDNA } from "@/types/brand";
+import type { BrandDNA, BrandStyle } from "@/types/brand";
 
 interface Props {
   brand: { id: string; slug: string; name: string; kind: string };
@@ -182,6 +182,88 @@ export default function BrandDnaEditor({ brand, initialDna, initialGoldExamples 
               Zatím žádné příklady. Přidejte 3–5 vzorových příspěvků pro nejlepší výsledky.
             </p>
           )}
+        </div>
+      </div>
+
+      {/* Visual style */}
+      <div>
+        <h3 className="font-medium text-zinc-200 mb-3">
+          Vizuální styl{" "}
+          <span className="text-zinc-500 font-normal text-sm">
+            — výchozí barvy a fonty pro generované obrázky
+          </span>
+        </h3>
+        <div className="grid grid-cols-1 gap-4">
+          {/* Colors row */}
+          <div className="grid grid-cols-3 gap-3">
+            {(
+              [
+                { key: "backgroundColor", label: "Barva pozadí" },
+                { key: "headingColor", label: "Barva nadpisu" },
+                { key: "textColor", label: "Barva textu" },
+              ] as { key: keyof BrandStyle; label: string }[]
+            ).map(({ key, label }) => {
+              const value = (dna.style?.[key] as string) ?? "#1a1a2e";
+              return (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">{label}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={value}
+                      onChange={(e) =>
+                        setDna((prev) => ({
+                          ...prev,
+                          style: { ...prev.style, [key]: e.target.value },
+                        }))
+                      }
+                      className="h-9 w-12 rounded cursor-pointer border border-zinc-600 bg-zinc-800 p-0.5"
+                    />
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) =>
+                        setDna((prev) => ({
+                          ...prev,
+                          style: { ...prev.style, [key]: e.target.value },
+                        }))
+                      }
+                      className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-zinc-100 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {/* Fonts row */}
+          <div className="grid grid-cols-2 gap-3">
+            {(
+              [
+                { key: "headingFont", label: "Font nadpisu", placeholder: "Playfair Display" },
+                { key: "textFont", label: "Font textu", placeholder: "Lato" },
+              ] as { key: keyof BrandStyle; label: string; placeholder: string }[]
+            ).map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">{label}</label>
+                <input
+                  type="text"
+                  value={(dna.style?.[key] as string) ?? ""}
+                  onChange={(e) =>
+                    setDna((prev) => ({
+                      ...prev,
+                      style: { ...prev.style, [key]: e.target.value },
+                    }))
+                  }
+                  placeholder={placeholder}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-zinc-600">
+            Fonty jsou aplikovány pokud je soubor .ttf umístěn v adresáři{" "}
+            <code className="font-mono">assets/</code>. Barvy se použijí ihned.
+          </p>
         </div>
       </div>
 

@@ -5,7 +5,7 @@ import { renderContentImage, defaultBrandColors } from "@/services/image-rendere
 import type { ProductBadge } from "@/services/image-renderer";
 import { fetchWooProduct } from "@/services/woocommerce";
 import { scrapeProductImage } from "@/services/scrape-product-image";
-import type { GeneratedCopy, BrandDNA } from "@/types/brand";
+import type { GeneratedCopy, BrandDNA, BrandStyle } from "@/types/brand";
 
 export async function POST(
   request: NextRequest,
@@ -21,16 +21,20 @@ export async function POST(
   let copy: GeneratedCopy;
   let dna: BrandDNA;
   let uploadedAssets: { path: string }[] = [];
+  let contentStyleOverrides: BrandStyle = {};
 
   try {
     copy = JSON.parse(content.copy);
     dna = JSON.parse(content.brand.dna);
     if (content.uploadedAssets) uploadedAssets = JSON.parse(content.uploadedAssets);
+    if (content.styleOverrides) contentStyleOverrides = JSON.parse(content.styleOverrides);
   } catch {
     return NextResponse.json({ error: "Chyba parsování dat." }, { status: 500 });
   }
 
   const brandColors = defaultBrandColors(dna);
+  // Merge: brand-level style defaults, then per-post overrides on top
+  const style: BrandStyle = { ...dna.style, ...contentStyleOverrides };
   const photoPath = uploadedAssets[0]?.path;
   const photoPaths = uploadedAssets.map((a) => a.path);
 
@@ -101,6 +105,7 @@ export async function POST(
       photoPaths: photoPaths.length > 1 ? photoPaths : undefined,
       photoUrl,
       productBadge,
+      style: Object.keys(style).length > 0 ? style : undefined,
     });
 
     // Save generated assets back to content

@@ -1,3 +1,11 @@
+export interface BrandStyle {
+  backgroundColor?: string;
+  headingColor?: string;
+  textColor?: string;
+  headingFont?: string;
+  textFont?: string;
+}
+
 export interface BrandDNA {
   brand_name: string;
   kind: "ecommerce" | "physical";
@@ -11,6 +19,7 @@ export interface BrandDNA {
   fonts: string[];
   hashtag_bank: string[];
   example_posts: ExamplePost[];
+  style?: BrandStyle;
 }
 
 export interface ExamplePost {
